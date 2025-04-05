@@ -3,6 +3,7 @@ package com.example.lineta_posts_interaction.service.impl;
 import com.example.lineta_posts_interaction.entity.Post;
 import com.example.lineta_posts_interaction.service.PostService;
 import com.google.api.core.ApiFuture;
+import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.WriteResult;
@@ -25,11 +26,13 @@ public class PostServiceImpl implements PostService {
         postFB.put("username", post.getUsername());
         postFB.put("content", post.getContent());
         postFB.put("picture", post.getPicture());
+        postFB.put("video", post.getVideo());
         postFB.put("date", post.getDate());
+        postFB.put("timestamp", Timestamp.now());
 
 
         DocumentReference docRef = firestore.collection("posts").document();
-        ApiFuture<WriteResult> writeResult = docRef.set(post);
+        ApiFuture<WriteResult> writeResult = docRef.set(postFB);
         return writeResult.get();
     }
 }
