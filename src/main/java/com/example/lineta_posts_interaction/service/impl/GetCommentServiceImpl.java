@@ -1,6 +1,7 @@
 package com.example.lineta_posts_interaction.service.impl;
-
+import com.example.lineta_posts_interaction.entity.Comment;
 import com.example.lineta_posts_interaction.entity.Post;
+import com.example.lineta_posts_interaction.service.GetCommentService;
 import com.example.lineta_posts_interaction.service.PostUpService;
 import com.google.firebase.cloud.FirestoreClient;
 import com.google.cloud.firestore.Firestore;
@@ -14,21 +15,22 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @Service
-public class PostUpServiceImpl implements PostUpService {
+public class GetCommentServiceImpl implements GetCommentService {
 
     @Override
-    public List<Post> getPosts(int page, int size) throws ExecutionException, InterruptedException {
+    public List<Comment> getComments(String postID, int page, int size) throws ExecutionException, InterruptedException {
         Firestore db = FirestoreClient.getFirestore();
-        List<Post> posts = new ArrayList<>();
+        List<Comment> comments = new ArrayList<>();
 
         // Cập nhật query phân trang
-        Query query = db.collection("posts")
-                .orderBy("timestamp", Query.Direction.DESCENDING)
+        Query query = db.collection("comments")
+                .whereEqualTo("postID", postID) // Lọc theo postID
+                .orderBy("timestamp")
                 .limit(size);
 
         // Nếu page > 1, áp dụng startAfter để phân trang
         if (page > 1) {
-            QueryDocumentSnapshot lastVisiblePost = getLastVisiblePostForPage(page - 1, size);
+            QueryDocumentSnapshot lastVisiblePost = getLastVisiblePostForPage(postID,page - 1, size);
             if (lastVisiblePost != null) {
                 query = query.startAfter(lastVisiblePost);
             }
@@ -37,27 +39,29 @@ public class PostUpServiceImpl implements PostUpService {
         QuerySnapshot querySnapshot = query.get().get();
 
         for (QueryDocumentSnapshot document : querySnapshot) {
-            Post post = document.toObject(Post.class);
-            post.setId(document.getId()); // Gán ID của document vào Post
-            posts.add(post);
+            Comment comment = document.toObject(Comment.class);
+            comment.setId(document.getId()); // Gán ID của document vào comment
+            comments.add(comment);
         }
 
-        return posts;
+        return comments;
     }
 
 
     // Lấy bài viết cuối cùng trong trang trước
-    private QueryDocumentSnapshot getLastVisiblePostForPage(int page, int size) throws ExecutionException, InterruptedException {
+    private QueryDocumentSnapshot getLastVisiblePostForPage(String postID, int page, int size) throws ExecutionException, InterruptedException {
         Firestore db = FirestoreClient.getFirestore();
 
-        Query query = db.collection("posts")
-                .orderBy("timestamp",Query.Direction.DESCENDING) // Giả sử bạn sắp xếp theo thời gian
+        Query query = db.collection("comments")
+                .whereEqualTo("postID", postID) // Lọc theo postID
+                .orderBy("timestamp")
                 .limit(size * page);
 
         QuerySnapshot querySnapshot = query.get().get();
         if (!querySnapshot.isEmpty()) {
-            return querySnapshot.getDocuments().get(querySnapshot.size() - 1); // Bài viết cuối cùng của trang trước
+            return querySnapshot.getDocuments().get(querySnapshot.size() - 1);
         }
         return null;
     }
+
 }
