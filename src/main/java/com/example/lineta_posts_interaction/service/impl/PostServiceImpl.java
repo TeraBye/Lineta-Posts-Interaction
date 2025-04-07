@@ -28,6 +28,7 @@ public class PostServiceImpl implements PostService {
         postFB.put("picture", post.getPicture());
         postFB.put("video", post.getVideo());
         postFB.put("date", post.getDate());
+        postFB.put("numberOfLike", post.getNumberOfLike());
         postFB.put("timestamp", Timestamp.now());
 
 
@@ -35,4 +36,11 @@ public class PostServiceImpl implements PostService {
         ApiFuture<WriteResult> writeResult = docRef.set(postFB);
         return writeResult.get();
     }
+
+    public WriteResult incrementLike(String postId, int delta) throws ExecutionException, InterruptedException {
+        DocumentReference docRef = firestore.collection("posts").document(postId);
+        ApiFuture<WriteResult> future = docRef.update("numberOfLike", com.google.cloud.firestore.FieldValue.increment(delta));
+        return future.get();
+    }
+
 }
