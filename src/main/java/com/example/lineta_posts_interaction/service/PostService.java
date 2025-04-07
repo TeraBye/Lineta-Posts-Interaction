@@ -6,4 +6,5 @@ import java.util.concurrent.ExecutionException;
 
 public interface PostService {
     WriteResult savePost(Post post) throws ExecutionException, InterruptedException;
+    WriteResult incrementLike(String postId, int delta) throws ExecutionException, InterruptedException;
 }
