@@ -20,18 +20,6 @@ public class PostController {
         this.postService = postService;
     }
 
-//    @PostMapping("/creat2e")
-//    public ResponseEntity<String> createPost(@RequestParam String userId,
-//                                             @RequestParam String content,
-//                                             @RequestParam String imageUrl) {
-//        try {
-//            WriteResult result = postService.savePost(userId, content, imageUrl);
-//            return ResponseEntity.ok("Post created at: " + result.getUpdateTime());
-//        } catch (ExecutionException | InterruptedException e) {
-//            return ResponseEntity.status(500).body("Error: " + e.getMessage());
-//        }
-//    }
-
     @PostMapping("/create")
     public ResponseEntity<String> createPost(@RequestBody Post post) {
         try {
