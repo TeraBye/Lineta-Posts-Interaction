@@ -1,5 +1,6 @@
 package com.example.lineta_posts_interaction.service.impl;
 
+import com.example.lineta_posts_interaction.dto.request.PostUserRequestDTO;
 import com.example.lineta_posts_interaction.entity.Post;
 import com.example.lineta_posts_interaction.service.PostService;
 import com.google.api.core.ApiFuture;
@@ -21,7 +22,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public WriteResult savePost(Post post) throws ExecutionException, InterruptedException {
+    public WriteResult savePost(PostUserRequestDTO post) throws ExecutionException, InterruptedException {
         Map<String, Object> postFB = new HashMap<>();
         postFB.put("username", post.getUsername());
         postFB.put("content", post.getContent());
