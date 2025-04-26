@@ -32,7 +32,6 @@ public class PostServiceImpl implements PostService {
         postFB.put("numberOfLike", post.getNumberOfLike());
         postFB.put("timestamp", Timestamp.now());
 
-
         DocumentReference docRef = firestore.collection("posts").document();
         ApiFuture<WriteResult> writeResult = docRef.set(postFB);
         return writeResult.get();
