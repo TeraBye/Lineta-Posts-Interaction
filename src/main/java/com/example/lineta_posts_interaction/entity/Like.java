@@ -1,5 +1,4 @@
 package com.example.lineta_posts_interaction.entity;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -12,14 +11,7 @@ import lombok.*;
 @Getter
 @Setter
 @Builder
-public class Post {
-    private String id;
+public class Like {
     private String username;
-    private String content;
-    private String picture;
-    private String date;
-    private String video;
-    private int numberOfLike;
-
-
+    private String postID;
 }

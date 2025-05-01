@@ -1,5 +1,7 @@
 package com.example.lineta_posts_interaction.service.impl;
 
+import com.example.lineta_posts_interaction.dto.request.CommentUserRequestDTO;
+import com.example.lineta_posts_interaction.dto.response.CommentWithUserDTO;
 import com.example.lineta_posts_interaction.entity.Comment;
 
 import com.example.lineta_posts_interaction.service.CommentService;
@@ -22,7 +24,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public WriteResult saveComment(Comment comment) throws ExecutionException, InterruptedException {
+    public WriteResult saveComment(CommentUserRequestDTO comment) throws ExecutionException, InterruptedException {
         Map<String, Object> commentFB = new HashMap<>();
         commentFB.put("username", comment.getUsername());
         commentFB.put("content", comment.getContent());
