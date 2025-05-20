@@ -14,4 +14,5 @@ import lombok.*;
 public class Like {
     private String username;
     private String postID;
+    private String tempContent;
 }

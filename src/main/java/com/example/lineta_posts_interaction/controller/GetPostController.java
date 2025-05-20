@@ -1,16 +1,14 @@
 package com.example.lineta_posts_interaction.controller;
 
 import com.example.lineta_posts_interaction.client.UserClient;
+import com.example.lineta_posts_interaction.dto.response.ApiResponse;
 import com.example.lineta_posts_interaction.dto.response.UserDTO;
 import com.example.lineta_posts_interaction.dto.response.PostWithUserDTO;
 import com.example.lineta_posts_interaction.entity.Post;
 import com.example.lineta_posts_interaction.service.PostUpService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -19,6 +17,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 @RestController
+@RequestMapping("/api/posts")
 public class GetPostController {
 
     private final PostUpService postUpService;
@@ -30,19 +29,8 @@ public class GetPostController {
         this.userClient = userClient;
     }
 
-//    @GetMapping("/posts")
-//    public List<Post> getPostsByUsername(
-//            @RequestParam(defaultValue = "0") int page,  // Trang hiện tại, mặc định là 0
-//            @RequestParam(defaultValue = "5") int size  // Số bài viết mỗi lần, mặc định là 5
-//    ) throws ExecutionException, InterruptedException {
-//
-//
-//        return postUpService.getPosts(page, size);
-//    }
-
-    @GetMapping("/posts")
-    public ResponseEntity<?> getPostsByUsername(
-            @RequestHeader("Authorization") String authorizationHeader, // 👈 Lấy token từ request
+    @GetMapping("/getPosts")
+    public ResponseEntity<ApiResponse<List<PostWithUserDTO>>> getPostsByUsername(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size
     ) throws ExecutionException, InterruptedException {
@@ -54,15 +42,20 @@ public class GetPostController {
                 .collect(Collectors.toSet());
 
         // Gọi sang UserService và truyền token
-        System.out.println(extractToken(authorizationHeader));
-        Map<String, UserDTO> userMap = userClient.getUsersByUsernames(usernames, extractToken(authorizationHeader));
+
+        Map<String, UserDTO> userMap = userClient.getUsersByUsernames(usernames);
 
         List<PostWithUserDTO> postDTOs = posts.stream()
                 .map(post -> new PostWithUserDTO(post, userMap.get(post.getUsername())))
                 .collect(Collectors.toList());
-
-        return ResponseEntity.ok(postDTOs);
+        System.out.println(postDTOs);
+        return ResponseEntity.ok(ApiResponse.<List<PostWithUserDTO>>builder()
+                .code(1000)
+                .message("Fetched posts successfully")
+                .result(postDTOs)
+                .build());
     }
+
 
     // Nếu cần tách "Bearer <token>" thành token:
     private String extractToken(String header) {

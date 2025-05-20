@@ -6,6 +6,7 @@ import com.example.lineta_posts_interaction.service.PostService;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.DocumentReference;
+import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.WriteResult;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,7 @@ public class PostServiceImpl implements PostService {
         postFB.put("numberOfLike", post.getNumberOfLike());
         postFB.put("timestamp", Timestamp.now());
 
-        DocumentReference docRef = firestore.collection("posts").document();
+        DocumentReference docRef = firestore.collection("posts").document(post.getPostId());
         ApiFuture<WriteResult> writeResult = docRef.set(postFB);
         return writeResult.get();
     }
@@ -41,6 +42,19 @@ public class PostServiceImpl implements PostService {
         DocumentReference docRef = firestore.collection("posts").document(postId);
         ApiFuture<WriteResult> future = docRef.update("numberOfLike", com.google.cloud.firestore.FieldValue.increment(delta));
         return future.get();
+    }
+
+    public String getUsernameFromPost(String postId) throws ExecutionException, InterruptedException {
+        DocumentSnapshot snapshot = firestore.collection("posts")
+                .document(postId)
+                .get()
+                .get();
+
+        if (snapshot.exists()) {
+            return snapshot.getString("username");
+        } else {
+            return null;
+        }
     }
 
 }
