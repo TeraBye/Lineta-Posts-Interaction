@@ -33,7 +33,7 @@ public class CommentServiceImpl implements CommentService {
         commentFB.put("postID", comment.getPostID());
 
 
-        DocumentReference docRef = firestore.collection("comments").document();
+        DocumentReference docRef = firestore.collection("comments").document(comment.getCommentId());
         ApiFuture<WriteResult> writeResult = docRef.set(commentFB);
         return writeResult.get();
     }

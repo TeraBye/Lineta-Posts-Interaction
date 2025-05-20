@@ -1,6 +1,7 @@
 package com.example.lineta_posts_interaction.controller;
 
 import com.example.lineta_posts_interaction.client.UserClient;
+import com.example.lineta_posts_interaction.dto.response.ApiResponse;
 import com.example.lineta_posts_interaction.dto.response.CommentWithUserDTO;
 import com.example.lineta_posts_interaction.dto.response.ReplyWithUserDTO;
 import com.example.lineta_posts_interaction.dto.response.UserDTO;
@@ -10,10 +11,7 @@ import com.example.lineta_posts_interaction.service.GetCommentService;
 import com.example.lineta_posts_interaction.service.GetReplyCommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -22,6 +20,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 @RestController
+@RequestMapping("/api/comments")
 public class GetCommentsController {
 
     private final GetCommentService getCommentService;
@@ -35,28 +34,32 @@ public class GetCommentsController {
         this.userClient = userClient;
     }
 
-    @GetMapping("/comments")
-    public ResponseEntity<?>  getComments(
-            @RequestHeader("Authorization") String authorizationHeader,
+    @GetMapping("/getComments")
+    public ResponseEntity<ApiResponse<List<CommentWithUserDTO>>> getComments(
             @RequestParam(name = "postID") String postId,
-            @RequestParam(defaultValue = "0") int page,  // Trang hiện tại, mặc định là 0
-            @RequestParam(defaultValue = "5") int size  // Số bài viết mỗi lần, mặc định là 5
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size
     ) throws ExecutionException, InterruptedException {
+
         List<Comment> comments = getCommentService.getComments(postId, page, size);
+
         Set<String> usernames = comments.stream()
                 .map(Comment::getUsername)
                 .collect(Collectors.toSet());
 
-        // Gọi sang UserService và truyền token
-        System.out.println(extractToken(authorizationHeader));
-        Map<String, UserDTO> userMap = userClient.getUsersByUsernames(usernames, extractToken(authorizationHeader));
+        Map<String, UserDTO> userMap = userClient.getUsersByUsernames(usernames);
 
         List<CommentWithUserDTO> commentDTOs = comments.stream()
                 .map(comment -> new CommentWithUserDTO(comment, userMap.get(comment.getUsername())))
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(commentDTOs);
+        return ResponseEntity.ok(ApiResponse.<List<CommentWithUserDTO>>builder()
+                .code(1000)
+                .message("Fetched comments successfully")
+                .result(commentDTOs)
+                .build());
     }
+
 
     // Nếu cần tách "Bearer <token>" thành token:
     private String extractToken(String header) {
@@ -66,28 +69,30 @@ public class GetCommentsController {
         return header; // fallback
     }
 
-
-
-
-    @GetMapping("/replyComments")
-    public ResponseEntity<?>  getReplyComments(
-            @RequestHeader("Authorization") String authorizationHeader,
+    @GetMapping("/getReply")
+    public ResponseEntity<ApiResponse<List<ReplyWithUserDTO>>> getReplyComments(
             @RequestParam(name = "commentID") String commentID,
-            @RequestParam(defaultValue = "0") int page,  // Trang hiện tại, mặc định là 0
-            @RequestParam(defaultValue = "5") int size  // Số bài viết mỗi lần, mặc định là 5
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size
     ) throws ExecutionException, InterruptedException {
+
         List<ReplyComment> replyComments = getReplyCommentService.getReplyComments(commentID, page, size);
+
         Set<String> usernames = replyComments.stream()
                 .map(ReplyComment::getUsername)
                 .collect(Collectors.toSet());
 
-        // Gọi sang UserService và truyền token
-        Map<String, UserDTO> userMap = userClient.getUsersByUsernames(usernames, extractToken(authorizationHeader));
+        Map<String, UserDTO> userMap = userClient.getUsersByUsernames(usernames);
 
         List<ReplyWithUserDTO> replyDTOs = replyComments.stream()
-                .map(replyComment -> new ReplyWithUserDTO(replyComment, userMap.get(replyComment.getUsername())))
+                .map(reply -> new ReplyWithUserDTO(reply, userMap.get(reply.getUsername())))
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(replyDTOs);
+        return ResponseEntity.ok(ApiResponse.<List<ReplyWithUserDTO>>builder()
+                .code(1000)
+                .message("Fetched reply comments successfully")
+                .result(replyDTOs)
+                .build());
     }
+
 }

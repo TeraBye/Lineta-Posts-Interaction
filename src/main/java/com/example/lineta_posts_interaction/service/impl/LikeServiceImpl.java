@@ -1,6 +1,8 @@
 package com.example.lineta_posts_interaction.service.impl;
 
 
+import com.example.lineta_posts_interaction.dto.request.LikeUserRequestDTO;
+import com.example.lineta_posts_interaction.dto.response.LikeWithUserDTO;
 import com.example.lineta_posts_interaction.entity.Like;
 import com.example.lineta_posts_interaction.service.LikeService;
 import com.google.api.core.ApiFuture;
@@ -21,11 +23,12 @@ public class LikeServiceImpl implements LikeService {
     }
 
     @Override
-    public WriteResult saveLike(Like like) throws ExecutionException, InterruptedException {
+    public WriteResult saveLike(LikeUserRequestDTO like) throws ExecutionException, InterruptedException {
         Map<String, Object> commentFB = new HashMap<>();
         commentFB.put("username", like.getUsername());
         commentFB.put("timestamp", Timestamp.now());
         commentFB.put("postID", like.getPostID());
+        commentFB.put("tempContent", like.getTempContent());
 
 
         DocumentReference docRef = firestore.collection("postLikes").document();
