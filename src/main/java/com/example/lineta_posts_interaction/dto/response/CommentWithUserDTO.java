@@ -9,6 +9,7 @@ public class CommentWithUserDTO {
     private String content;
     private String date;
     private String postID;
+    private int numberOfLike;
 
     private String fullName;
     private String profilePicURL;
@@ -19,6 +20,7 @@ public class CommentWithUserDTO {
         this.content = comment.getContent();
         this.date = comment.getDate();
         this.postID = comment.getPostID();
+        this.numberOfLike = comment.getNumberOfLike();
 
 
         if (userDTO != null) {

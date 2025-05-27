@@ -1,8 +1,10 @@
 package com.example.lineta_posts_interaction.client;
 
 import com.example.lineta_posts_interaction.dto.response.UserDTO;
+import com.example.lineta_posts_interaction.dto.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -27,11 +29,7 @@ public class UserClient {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        // Thêm token vào header Authorization
-        // tương đương: headers.set("Authorization", "Bearer " + token);
-
         HttpEntity<Set<String>> request = new HttpEntity<>(usernames);
-
         ResponseEntity<UserDTO[]> response = restTemplate.exchange(
                 url,
                 HttpMethod.POST,
@@ -47,28 +45,26 @@ public class UserClient {
         return new HashMap<>();
     }
 
-    public UserDTO getUserByUsername(String username, String token) {
-        String url = userServiceUrl + "/api/auth/users/get-user-by-username/";
+    @Value("http://localhost:8081")
+    private String userServiceUrl8081;
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(token);
+    public List<String> getFollowerUsernames(String followedId) {
+        String url = userServiceUrl8081 + "/api/friend/users/followers-with-username/" + followedId;
 
-        HttpEntity<Void> request = new HttpEntity<>(headers);
-
-        ResponseEntity<UserDTO> response = restTemplate.exchange(
-                url + UriUtils.encode(username, StandardCharsets.UTF_8),
+        ResponseEntity<ApiResponse<List<String>>> response = restTemplate.exchange(
+                url,
                 HttpMethod.GET,
-                request,
-                UserDTO.class
+                null,
+                new ParameterizedTypeReference<ApiResponse<List<String>>>() {}
         );
 
         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-            return response.getBody();
+            return (List<String>) response.getBody().getResult();
         }
 
-        return null;
+        return Collections.emptyList();
     }
+
 
 
 }

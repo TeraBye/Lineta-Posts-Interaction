@@ -9,4 +9,6 @@ public interface PostService {
     WriteResult savePost(PostUserRequestDTO post) throws ExecutionException, InterruptedException;
     WriteResult incrementLike(String postId, int delta) throws ExecutionException, InterruptedException;
     String getUsernameFromPost(String postId) throws ExecutionException, InterruptedException;
+    String getUsernameFromComment(String commentId) throws ExecutionException, InterruptedException;
+    WriteResult incrementCommentLike(String commentId, int delta) throws ExecutionException, InterruptedException;
 }
