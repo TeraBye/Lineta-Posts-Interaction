@@ -13,6 +13,7 @@ public class PostUserRequestDTO {
     private String date;
     private String fullName;
     private String profilePicURL;
+    private String uid;
 
     public PostUserRequestDTO() {
         super();

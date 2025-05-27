@@ -1,8 +1,10 @@
 package com.example.lineta_posts_interaction.controller;
 
 import com.example.lineta_posts_interaction.dto.request.CommentUserRequestDTO;
+import com.example.lineta_posts_interaction.dto.request.ReplyUserRequestDTO;
 import com.example.lineta_posts_interaction.dto.response.ApiResponse;
 import com.example.lineta_posts_interaction.dto.response.CommentWithUserDTO;
+import com.example.lineta_posts_interaction.dto.response.ReplyWithUserDTO;
 import com.example.lineta_posts_interaction.entity.Comment;
 import com.example.lineta_posts_interaction.entity.ReplyComment;
 import com.example.lineta_posts_interaction.service.CommentService;
@@ -48,7 +50,7 @@ public class CommentController {
             WriteResult saved = commentService.saveComment(comment);
 
             // Gửi comment qua WebSocket
-            messagingTemplate.convertAndSend("/topic/comments", comment);
+            messagingTemplate.convertAndSend("/topic/comments/" + comment.getPostID(), comment);
 
             // Tạo nội dung message Kafka
             Map<String, Object> message = new HashMap<>();
@@ -57,7 +59,7 @@ public class CommentController {
             message.put("cmtReceiver", postService.getUsernameFromPost(comment.getPostID()));
             message.put("isRead", false);
             message.put("postId", comment.getPostID());
-            message.put("content", comment.getFullName() + " đã bình luận bài viết của bạn: "
+            message.put("content", comment.getFullName() + " commented your post: "
             + shortenText(comment.getContent(),5));
 
             ObjectMapper mapper = new ObjectMapper();
@@ -78,10 +80,24 @@ public class CommentController {
 
 
     @PostMapping("/reply")
-    public ResponseEntity<ApiResponse<ReplyComment>> addReply(@RequestBody ReplyComment replyComment) throws ExecutionException, InterruptedException {
+    public ResponseEntity<ApiResponse<ReplyUserRequestDTO>> addReply(@RequestBody ReplyUserRequestDTO replyComment) throws ExecutionException, InterruptedException, JsonProcessingException {
         WriteResult saved = replyCommentService.saveReplyComment(replyComment);
 
-        return ResponseEntity.ok(ApiResponse.<ReplyComment>builder()
+        messagingTemplate.convertAndSend("/topic/reply/" + replyComment.getCommentId(), replyComment);
+        // Tạo nội dung message Kafka
+        Map<String, Object> message = new HashMap<>();
+        message.put("senderUsername",replyComment.getUsername());
+        message.put("type", "reply");
+        message.put("cmtReceiver", postService.getUsernameFromComment(replyComment.getCommentId()));
+        message.put("isRead", false);
+        message.put("postId", null);
+        message.put("content", replyComment.getFullName() + " responded your comment: "
+                + shortenText(replyComment.getContent(),5));
+
+        ObjectMapper mapper = new ObjectMapper();
+        kafkaTemplate.send("post-notifications", mapper.writeValueAsString(message));
+
+        return ResponseEntity.ok(ApiResponse.<ReplyUserRequestDTO>builder()
                 .code(1000)
                 .message("Reply comment created at: " + saved.getUpdateTime())
                 .result(replyComment)

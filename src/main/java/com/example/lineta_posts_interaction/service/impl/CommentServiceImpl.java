@@ -31,6 +31,7 @@ public class CommentServiceImpl implements CommentService {
         commentFB.put("date", comment.getDate());
         commentFB.put("timestamp", Timestamp.now());
         commentFB.put("postID", comment.getPostID());
+        commentFB.put("numberOfLike", 0);
 
 
         DocumentReference docRef = firestore.collection("comments").document(comment.getCommentId());

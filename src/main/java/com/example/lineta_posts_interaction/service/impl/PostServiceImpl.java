@@ -44,9 +44,28 @@ public class PostServiceImpl implements PostService {
         return future.get();
     }
 
+    public WriteResult incrementCommentLike(String commentId, int delta) throws ExecutionException, InterruptedException {
+        DocumentReference docRef = firestore.collection("comments").document(commentId);
+        ApiFuture<WriteResult> future = docRef.update("numberOfLike", com.google.cloud.firestore.FieldValue.increment(delta));
+        return future.get();
+    }
+
     public String getUsernameFromPost(String postId) throws ExecutionException, InterruptedException {
         DocumentSnapshot snapshot = firestore.collection("posts")
                 .document(postId)
+                .get()
+                .get();
+
+        if (snapshot.exists()) {
+            return snapshot.getString("username");
+        } else {
+            return null;
+        }
+    }
+
+    public String getUsernameFromComment(String commentId) throws ExecutionException, InterruptedException {
+        DocumentSnapshot snapshot = firestore.collection("comments")
+                .document(commentId)
                 .get()
                 .get();
 

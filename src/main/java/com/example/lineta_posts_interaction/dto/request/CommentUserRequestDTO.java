@@ -9,6 +9,7 @@ public class CommentUserRequestDTO {
     private String content;
     private String date;
     private String postID;
+    private int numberOfLike;
 
     private String fullName;
     private String profilePicURL;

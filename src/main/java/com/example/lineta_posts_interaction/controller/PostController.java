@@ -1,5 +1,6 @@
 package com.example.lineta_posts_interaction.controller;
 
+import com.example.lineta_posts_interaction.client.UserClient;
 import com.example.lineta_posts_interaction.dto.request.PostUserRequestDTO;
 import com.example.lineta_posts_interaction.dto.response.ApiResponse;
 import com.example.lineta_posts_interaction.service.PostService;
@@ -26,10 +27,12 @@ public class PostController {
     private final PostService postService;
     @Autowired
     private RestTemplate restTemplate;
+    private final UserClient userClient;
 
 
-    public PostController(PostService postService) {
+    public PostController(PostService postService, UserClient userClient) {
         this.postService = postService;
+        this.userClient = userClient;
     }
 
     @Autowired
@@ -49,8 +52,9 @@ public class PostController {
             message.put("type", "post");
             message.put("isRead", false);
             message.put("postId", post.getPostId());
-            message.put("content", post.getFullName() + " đã đăng một bài viết: "
+            message.put("content", post.getFullName() + " posted a new post: "
             +shortenText(post.getContent(),5));
+            message.put("sender-uid",post.getUid());
 
             ObjectMapper mapper = new ObjectMapper();
             kafkaTemplate.send("post-notifications", mapper.writeValueAsString(message));
