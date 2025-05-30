@@ -72,6 +72,59 @@ public class PostController {
         }
     }
 
+    @DeleteMapping("/deletePost/{postId}")
+    public ResponseEntity<ApiResponse<Void>> deletePost(@PathVariable String postId) {
+        try {
+            postService.deletePostWithDependencies(postId); // Gọi hàm đã tối ưu ở trên
+
+            // Gửi thông báo realtime (WebSocket)
+            messagingTemplate.convertAndSend("/topic/posts/delete", postId);
+
+            return ResponseEntity.ok(ApiResponse.<Void>builder()
+                    .code(1000)
+                    .message("Post deleted successfully: " + postId)
+                    .build());
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<Void>builder()
+                            .code(1001)
+                            .message("Error deleting post: " + e.getMessage())
+                            .build());
+        }
+    }
+
+    @PutMapping("/updatePost/{postId}")
+    public ResponseEntity<ApiResponse<Void>> updatePostContent(@PathVariable String postId, @RequestBody Map<String, String> body) {
+        try {
+            String content = body.get("content");
+
+            if (content == null || content.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.<Void>builder()
+                        .code(1002)
+                        .message("Content must not be empty")
+                        .build());
+            }
+
+            postService.updatePostContent(postId, content);
+
+
+            return ResponseEntity.ok(ApiResponse.<Void>builder()
+                    .code(1000)
+                    .message("Post updated successfully: " + postId)
+                    .build());
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<Void>builder()
+                            .code(1001)
+                            .message("Error updating post: " + e.getMessage())
+                            .build());
+        }
+    }
+
+
+
     public static String shortenText(String text, int wordLimit) {
         String[] words = text.split("\\s+");
         if (words.length <= wordLimit) {

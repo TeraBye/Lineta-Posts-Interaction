@@ -67,4 +67,23 @@ public class UserClient {
 
 
 
+    public List<String> getFollowingUsernames(String followedId) {
+        String url = userServiceUrl8081 + "/api/friend/users/following-with-username/" + followedId;
+
+        ResponseEntity<ApiResponse<List<String>>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<ApiResponse<List<String>>>() {}
+        );
+
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            return (List<String>) response.getBody().getResult();
+        }
+
+        return Collections.emptyList();
+    }
+
+
+
 }
