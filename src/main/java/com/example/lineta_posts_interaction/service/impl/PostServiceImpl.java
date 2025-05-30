@@ -5,12 +5,10 @@ import com.example.lineta_posts_interaction.entity.Post;
 import com.example.lineta_posts_interaction.service.PostService;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.Timestamp;
-import com.google.cloud.firestore.DocumentReference;
-import com.google.cloud.firestore.DocumentSnapshot;
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.WriteResult;
+import com.google.cloud.firestore.*;
 import org.springframework.stereotype.Service;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -37,6 +35,17 @@ public class PostServiceImpl implements PostService {
         ApiFuture<WriteResult> writeResult = docRef.set(postFB);
         return writeResult.get();
     }
+
+    public WriteResult updatePostContent(String postId, String content) throws ExecutionException, InterruptedException {
+        DocumentReference docRef = firestore.collection("posts").document(postId);
+
+        // Chỉ cập nhật field "content" và thêm timestamp mới nếu cần
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("content", content);
+        ApiFuture<WriteResult> writeResult = docRef.update(updates);
+        return writeResult.get();
+    }
+
 
     public WriteResult incrementLike(String postId, int delta) throws ExecutionException, InterruptedException {
         DocumentReference docRef = firestore.collection("posts").document(postId);
@@ -74,6 +83,60 @@ public class PostServiceImpl implements PostService {
         } else {
             return null;
         }
+    }
+
+    public void deletePostWithDependencies(String postId) throws ExecutionException, InterruptedException {
+        WriteBatch batch = firestore.batch();
+
+        // 1. Xóa post chính
+        DocumentReference postRef = firestore.collection("posts").document(postId);
+        batch.delete(postRef);
+
+        // 2. Tìm comments theo postId
+        List<QueryDocumentSnapshot> commentDocs = firestore.collection("comments")
+                .whereEqualTo("postId", postId)
+                .get()
+                .get()
+                .getDocuments();
+
+        for (QueryDocumentSnapshot commentDoc : commentDocs) {
+            String commentId = commentDoc.getId();
+            DocumentReference commentRef = commentDoc.getReference();
+            batch.delete(commentRef);
+
+            // 2.1 Xóa replyComments theo commentId
+            List<QueryDocumentSnapshot> replyDocs = firestore.collection("replyComments")
+                    .whereEqualTo("commentId", commentId)
+                    .get()
+                    .get()
+                    .getDocuments();
+            for (QueryDocumentSnapshot replyDoc : replyDocs) {
+                batch.delete(replyDoc.getReference());
+            }
+
+            // 2.2 Xóa commentLikes theo commentId
+            List<QueryDocumentSnapshot> commentLikeDocs = firestore.collection("commentLikes")
+                    .whereEqualTo("commentId", commentId)
+                    .get()
+                    .get()
+                    .getDocuments();
+            for (QueryDocumentSnapshot likeDoc : commentLikeDocs) {
+                batch.delete(likeDoc.getReference());
+            }
+        }
+
+        // 3. Xóa postLikes theo postId
+        List<QueryDocumentSnapshot> postLikeDocs = firestore.collection("postLikes")
+                .whereEqualTo("postId", postId)
+                .get()
+                .get()
+                .getDocuments();
+        for (QueryDocumentSnapshot postLikeDoc : postLikeDocs) {
+            batch.delete(postLikeDoc.getReference());
+        }
+
+        // 4. Thực thi batch
+        batch.commit().get();
     }
 
 }

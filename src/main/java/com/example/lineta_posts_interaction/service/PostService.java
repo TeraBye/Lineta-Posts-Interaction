@@ -11,4 +11,6 @@ public interface PostService {
     String getUsernameFromPost(String postId) throws ExecutionException, InterruptedException;
     String getUsernameFromComment(String commentId) throws ExecutionException, InterruptedException;
     WriteResult incrementCommentLike(String commentId, int delta) throws ExecutionException, InterruptedException;
+    void deletePostWithDependencies(String postId) throws ExecutionException, InterruptedException;
+    WriteResult updatePostContent(String postId, String content) throws ExecutionException, InterruptedException;
 }
