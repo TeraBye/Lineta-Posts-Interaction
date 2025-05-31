@@ -1,5 +1,6 @@
 package com.example.lineta_posts_interaction.controller;
 
+import com.example.lineta_posts_interaction.client.UserClient;
 import com.example.lineta_posts_interaction.dto.request.PostUserRequestDTO;
 import com.example.lineta_posts_interaction.dto.response.ApiResponse;
 import com.example.lineta_posts_interaction.service.PostService;
@@ -26,10 +27,12 @@ public class PostController {
     private final PostService postService;
     @Autowired
     private RestTemplate restTemplate;
+    private final UserClient userClient;
 
 
-    public PostController(PostService postService) {
+    public PostController(PostService postService, UserClient userClient) {
         this.postService = postService;
+        this.userClient = userClient;
     }
 
     @Autowired
@@ -49,8 +52,9 @@ public class PostController {
             message.put("type", "post");
             message.put("isRead", false);
             message.put("postId", post.getPostId());
-            message.put("content", post.getFullName() + " đã đăng một bài viết: "
+            message.put("content", post.getFullName() + " posted a new post: "
             +shortenText(post.getContent(),5));
+            message.put("sender-uid",post.getUid());
 
             ObjectMapper mapper = new ObjectMapper();
             kafkaTemplate.send("post-notifications", mapper.writeValueAsString(message));
@@ -67,6 +71,59 @@ public class PostController {
                     .build());
         }
     }
+
+    @DeleteMapping("/deletePost/{postId}")
+    public ResponseEntity<ApiResponse<Void>> deletePost(@PathVariable String postId) {
+        try {
+            postService.deletePostWithDependencies(postId); // Gọi hàm đã tối ưu ở trên
+
+            // Gửi thông báo realtime (WebSocket)
+            messagingTemplate.convertAndSend("/topic/posts/delete", postId);
+
+            return ResponseEntity.ok(ApiResponse.<Void>builder()
+                    .code(1000)
+                    .message("Post deleted successfully: " + postId)
+                    .build());
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<Void>builder()
+                            .code(1001)
+                            .message("Error deleting post: " + e.getMessage())
+                            .build());
+        }
+    }
+
+    @PutMapping("/updatePost/{postId}")
+    public ResponseEntity<ApiResponse<Void>> updatePostContent(@PathVariable String postId, @RequestBody Map<String, String> body) {
+        try {
+            String content = body.get("content");
+
+            if (content == null || content.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.<Void>builder()
+                        .code(1002)
+                        .message("Content must not be empty")
+                        .build());
+            }
+
+            postService.updatePostContent(postId, content);
+
+
+            return ResponseEntity.ok(ApiResponse.<Void>builder()
+                    .code(1000)
+                    .message("Post updated successfully: " + postId)
+                    .build());
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<Void>builder()
+                            .code(1001)
+                            .message("Error updating post: " + e.getMessage())
+                            .build());
+        }
+    }
+
+
 
     public static String shortenText(String text, int wordLimit) {
         String[] words = text.split("\\s+");
