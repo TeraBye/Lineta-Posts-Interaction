@@ -18,7 +18,7 @@ public class UserClient {
 
     private final RestTemplate restTemplate;
 
-    @Value("http://localhost:8080")
+    @Value("http://auth-service:8080")
     private String userServiceUrl;
 
     public Map<String, UserDTO> getUsersByUsernames(Set<String> usernames) {

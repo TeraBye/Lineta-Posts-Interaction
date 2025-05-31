@@ -33,4 +33,4 @@ build/
 .vscode/
 
 ##others
-/src/main/resources/postsKey.json
+/firebase/postsKey.json
