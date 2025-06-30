@@ -1,3 +1,22 @@
-Port: 9000
-api: (http://localhost:9000/api/posts/create) -> create new post + uploadFile
-api1: http://localhost:9000/posts -> get posts from firebase
+# Social Network Microservices Project
+
+## Frontend: ReactJs
+  #link_Git: https://github.com/XuanNam58/Social-Media-Frontend.git
+
+## Mobile
+  #link_Git: https://github.com/TeraBye/LinetaMobileApp.git
+
+## Services
+- auth-service
+- friend-service
+- interaction-service ✅ (my responsibility) 
+- message-service
+- notification-service ✅ (my responsibility)
+    #link_Git: https://github.com/TeraBye/Lineta-Notification.git
+
+## Technologies
+- Java, Spring Boot, Kafka, Redis, WebSocket, Docker ,api gateway,... 
+
+
+
+
